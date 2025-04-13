@@ -19,12 +19,12 @@ const TodoWrapper = () => {
     };
 
     useEffect(() => {
-        fetchTodos(); // Load todos on component mount
+        fetchTodos(); 
     }, []);
 
     const refreshTodos = () => {
         fetchTodos();
-        setEditableId(null); // Exit edit mode on refresh
+        setEditableId(null);
     };
 
     const addTodo = (task) => {
