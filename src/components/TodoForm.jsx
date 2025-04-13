@@ -7,7 +7,7 @@ const TodoForm = ({ addTodo }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post("https://backend-todo-kappa.vercel.app/api/add", { task: task })
+        axios.post("https://backend-todo-blond.vercel.app/api/add", { task: task })
             .then(result => {
                 console.log(result);
                 setTask("");
@@ -28,7 +28,7 @@ const TodoForm = ({ addTodo }) => {
                 value={task}
             />
             <button className='todo-btn'>Add task</button>
-            {error && <p className="error">{error}</p>}  {/* Error message */}
+            {error && <p className="error">{error}</p>}
         </form>
     );
 };

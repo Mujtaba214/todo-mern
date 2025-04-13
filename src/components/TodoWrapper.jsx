@@ -5,66 +5,72 @@ import axios from "axios";
 
 const TodoWrapper = () => {
     const [todos, setTodos] = useState([]);
-    const [refresh, setRefresh] = useState(false);
+    const [editableId, setEditableId] = useState(null);
+
+    const fetchTodos = () => {
+        axios.get("https://backend-todo-blond.vercel.app/api/data")
+            .then(result => {
+                setTodos(result.data.map(todo => ({
+                    ...todo,
+                    completed: todo.completed || false
+                })));
+            })
+            .catch(err => console.log(err));
+    };
 
     useEffect(() => {
-        axios.get("https://backend-todo-kappa.vercel.app/api/data")
-            .then(result => setTodos(result.data.map(todo => ({
-                ...todo,
-                completed: todo.completed || false
-            }))))
-            .catch(err => console.log(err));
-    }, [todos]);
+        fetchTodos(); // Load todos on component mount
+    }, []);
 
-    const addTodo = (todo) => {
-        axios.post("https://backend-todo-kappa.vercel.app/api/add", { task: todo })
-            .then(res => setTodos([...todos, { ...res.data, completed: false }]))
+    const refreshTodos = () => {
+        fetchTodos();
+        setEditableId(null); // Exit edit mode on refresh
+    };
+
+    const addTodo = (task) => {
+        axios.post("https://backend-todo-blond.vercel.app/api/add", { task })
+            .then(() => refreshTodos())
             .catch(err => console.log(err));
-        setRefresh(!refresh);
     };
 
     const deleteTodo = (id) => {
-        axios.delete(`https://backend-todo-kappa.vercel.app/api/delete/${id}`)
-            .then(() => setTodos(todos.filter(todo => todo._id !== id)))
+        axios.delete(`https://backend-todo-blond.vercel.app/api/delete/${id}`)
+            .then(() => refreshTodos())
             .catch(err => console.log(err));
     };
 
     const toggleComplete = (id) => {
-        const updatedTodo = todos.find(todo => todo._id === id);
-        const updatedTodoData = { ...updatedTodo, completed: !updatedTodo.completed };
+        const todo = todos.find(t => t._id === id);
+        if (!todo) return;
 
-        setTodos(todos.map(todo =>
-            todo._id === id ? updatedTodoData : todo
-        ));
-
-        axios.put(`https://backend-todo-kappa.vercel.app/api/update/${id}`, { completed: updatedTodoData.completed })
-            .then(res => {
-                console.log("Task updated successfully on the backend:", res.data);
-            })
-            .catch(err => console.log("Error updating task on the backend:", err));
-    };
-
-    const toggleEdit = (id) => {
-        setTodos(todos.map(todo =>
-            todo._id === id ? { ...todo, isEditable: !todo.isEditable } : todo
-        ));
+        axios.put(`https://backend-todo-blond.vercel.app/api/update/${id}`, { completed: !todo.completed })
+            .then(() => refreshTodos())
+            .catch(err => console.log(err));
     };
 
     const editTask = (task, id) => {
-        axios.put(`https://backend-todo-kappa.vercel.app/api/update/${id}`, { task })
-            .then(res => setTodos(todos.map(todo =>
-                todo._id === id ? { ...res.data, isEditable: false } : todo
-            )))
+        axios.put(`https://backend-todo-blond.vercel.app/api/update/${id}`, { task })
+            .then(() => refreshTodos())
             .catch(err => console.log(err));
     };
 
     return (
         <div className="TodoWrapper">
             <h1>Todo App</h1>
+            <button className="refresh-btn" onClick={refreshTodos}>
+                🔄 Refresh
+            </button>
+
             <TodoForm addTodo={addTodo} />
+
             {todos.map((todo) =>
-                todo.isEditable ? (
-                    <EditTodo key={todo._id} editTodo={editTask} task={todo} />
+                editableId === todo._id ? (
+                    <EditTodo
+                        key={todo._id}
+                        editTodo={editTask}
+                        task={todo}
+                        cancelEdit={() => setEditableId(null)}
+                    />
                 ) : (
                     <div className="Todo" key={todo._id}>
                         <p
@@ -74,7 +80,7 @@ const TodoWrapper = () => {
                             {todo.task}
                         </p>
                         <div className="buttons">
-                            <button className="todo-btn" onClick={() => toggleEdit(todo._id)}>
+                            <button className="todo-btn" onClick={() => setEditableId(todo._id)}>
                                 Edit
                             </button>
                             <button className="todo-btn" onClick={() => deleteTodo(todo._id)}>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const EditTodo = ({ editTodo, task }) => {
+const EditTodo = ({ editTodo, task, cancelEdit }) => {
   const [value, setValue] = useState(task.task);
 
   const handleSubmit = (e) => {
@@ -26,7 +26,7 @@ const EditTodo = ({ editTodo, task }) => {
       <button
         type="button"
         className="todo-btn cancel-btn"
-        onClick={() => editTodo(task.task, task._id)}
+        onClick={cancelEdit}
       >
         Cancel
       </button>
